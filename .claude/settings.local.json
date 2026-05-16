@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/fabiovidal/Dropbox/Code/laravel-vps log --oneline --all)",
+      "Bash(git -C /Users/fabiovidal/Dropbox/Code/laravel-vps show --stat HEAD)",
+      "Bash(git rm *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git mv *)",
+      "Bash(rmdir laravel-vps-setup *)"
+    ]
+  }
+}
