@@ -5,7 +5,7 @@ Setup completo de VPS Ubuntu 22.04/24.04 para Laravel, dividido em módulos para
 ## Estrutura
 
 ```
-laravel-vps-setup/
+laravel-vps/
 ├── README.md                       # este arquivo
 ├── setup.sh                        # orquestrador principal
 ├── config.sh                       # ✏️  EDITE AQUI antes de rodar
