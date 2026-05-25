@@ -111,7 +111,9 @@ done
 require_root
 # shellcheck source=lib/state.sh
 source "${SCRIPT_DIR}/lib/state.sh"
-mkdir -p "$SETUP_LOG_DIR"
+mkdir -p "$SETUP_LOG_DIR" || log_error "Não foi possível criar ${SETUP_LOG_DIR} — verifique permissões (necessário sudo)."
+chown "root:${APP_USER}" "$SETUP_LOG_DIR" 2>/dev/null || true
+chmod 750 "$SETUP_LOG_DIR"
 
 # =============================================================================
 # RESOLVE LISTA DE MÓDULOS A EXECUTAR
@@ -158,8 +160,13 @@ for m in "${TO_RUN[@]}"; do
 
     log_section "▶ Módulo: ${m} (${MODULES[$m]})"
 
-    # tee duplica stdout para arquivo. Capturamos exit code do bash com PIPESTATUS.
-    bash "${SCRIPT_DIR}/modules/${MODULES[$m]}" 2>&1 | tee "$LOG_FILE"
+    # Grava cabeçalho antes de rodar — garante arquivo de log não-vazio mesmo em falha imediata.
+    printf '=== MÓDULO: %s (%s) | %s ===\n\n' "$m" "${MODULES[$m]}" "$(date)" > "$LOG_FILE"
+    chown "root:${APP_USER}" "$LOG_FILE" 2>/dev/null || true
+    chmod 640 "$LOG_FILE"
+
+    # tee -a duplica stdout para arquivo (append sobre o cabeçalho). Capturamos exit code com PIPESTATUS.
+    bash "${SCRIPT_DIR}/modules/${MODULES[$m]}" 2>&1 | tee -a "$LOG_FILE"
     rc=${PIPESTATUS[0]}
 
     if [ "$rc" = "0" ]; then
@@ -168,6 +175,10 @@ for m in "${TO_RUN[@]}"; do
     else
         FAILED+=("$m")
         log_warn "Módulo '$m' FALHOU (exit=$rc)  →  $LOG_FILE"
+        if [ "$(wc -l < "$LOG_FILE")" -le 3 ]; then
+            log_warn "Log sem saída útil — módulo abortou antes de exibir erros. Para debugar:"
+            log_warn "  bash -x ${SCRIPT_DIR}/modules/${MODULES[$m]}"
+        fi
     fi
 done
 
